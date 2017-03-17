@@ -30,7 +30,7 @@ public:
 
 	// training samples related
 	//
-	float learning_portion;    //  TrainingSamples = LearningSamples + ValidationSamples
+	float LearningPortion;    //  TrainingSamples = LearningSamples + ValidationSamples
 	int SeedLearning;
 	float CriteriaAssertion;
 	//
@@ -43,10 +43,14 @@ public:
 	//
 	int FlagErrBalance;
 	int FlagLearningMethod;
+	int FlagAlpha;
+	int FlagMomentum;
 	//
 	int MaxIter;
 	float error_tol;
 	float gradient_tol;
+	//
+	float alpha_threshold;
 	//
 	float alpha;
 	float beta;
@@ -62,12 +66,16 @@ public:
 	// gdm, descending alpha, exp momentum
 	// gdx, floating alpha, exp momentum
 	//
-	static const int LEARN_GDD = 0;
-	static const int LEARN_GDA = 1;
-	static const int LEARN_GDM = 2;
-	static const int LEARN_GDX = 3;
+	static const int LEARN_GD = 0;
+	static const int LEARN_LM = 1;
 	//
-	static const int LEARN_LM = 4;
+	static const int ALPHA_PLAIN = 0;
+	static const int ALPHA_DES = 1;
+	static const int ALPHA_ADA = 2;
+	//
+	static const int MOMENTUM_NONE = 0;
+	static const int MOMENTUM_PREV = 1;
+	static const int MOMENTUM_EXP = 2;
 	//
 
 	// performance
@@ -88,17 +96,20 @@ public:
 		Shifts = new FloatMat[1];
 
 		//
-		learning_portion = 0.7;
+		LearningPortion = 0.7;
 		SeedLearning = 10;
 		CriteriaAssertion = 0.8;
 		//
 		FlagErrBalance = 0;
-		FlagLearningMethod = LEARN_GDX;   //
+		FlagLearningMethod = LEARN_GD;   //
+		FlagAlpha = ALPHA_PLAIN;
+		FlagMomentum = MOMENTUM_NONE;
 		//
 		MaxIter = 100;
 		error_tol = 0.0001;
 		gradient_tol = 0.0001;
 		//
+		alpha_threshold = 0.0002;
 		//
 		alpha = 0.001;
 		beta = 0.999;
@@ -108,6 +119,7 @@ public:
 		//
 		epsilon = 0.00001;
 		//
+
 	}
 	//
 	void setLearningParasDefault()
@@ -439,7 +451,7 @@ int FNN_Test(FNN_Model & fnn, FloatMat & Samples, FloatMat & Labels);
 //
 
 // training functions
-int FunctionFNN_Train_GDX(FNN_Model & fnn, FloatMat & Samples, FloatMat & Labels);
+int FunctionFNN_Train_GD(FNN_Model & fnn, FloatMat & Samples, FloatMat & Labels);
 int FunctionFNN_Train_LM(FNN_Model & fnn, FloatMat & Samples, FloatMat & Labels);
 //
 
