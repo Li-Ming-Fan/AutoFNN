@@ -1297,7 +1297,10 @@ int Internal_ValidationCheck_FNN(FNN_Model & fnn)
 	else fnn.performance[0] = 0;
 	//
 	fnn.performance[1] = 1.0 * TruePredictedPositive/PositiveTotal;
-
+	//
+	fnn.performance[2] = PositiveTotal;
+	fnn.performance[3] = PredictedPositive;
+	fnn.performance[4] = TruePredictedPositive;
 
 	return 1;
 }

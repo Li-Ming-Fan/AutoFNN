@@ -14,6 +14,7 @@ class FloatMat
 private:
 	int NumRows;
 	int NumCols;
+	//
 	int NumTotal;
 
 public:
@@ -103,6 +104,7 @@ public:
 		return *this;
 	}
 	//
+
 	// 算术运算，BLAS
 	// operator+
 	FloatMat operator+(FloatMat mat)
@@ -150,9 +152,30 @@ public:
 
 		return answ;
 	}
+	// transpose
+	FloatMat transpose()
+	{
+		FloatMat answ(NumCols, NumRows);
+
+		//
+		float * data_a = data;
+		float * data_b = answ.data;
+		//
+		for (int i = 0; i < NumRows; i++, data_a += NumCols, data_b++)
+		{
+			//cblas_scopy (const MKL_INT n, const float *x, const MKL_INT incx, float *y, const MKL_INT incy);
+			//
+			// copy and transpose
+			//
+			cblas_scopy(NumCols, data_a, 1, data_b, NumRows);
+			//
+		}
+
+		return answ;
+	}
 	//
 
-	// No BLAS
+	// 算术运算，No BLAS
 	// plus alpha * I
 	FloatMat plusWeightedIdentity(float alpha)
 	{
@@ -330,31 +353,6 @@ public:
 	}
 	//
 
-	// transpose
-	FloatMat transpose()
-	{
-		FloatMat answ(NumCols, NumRows);
-
-		int PosiB = 0;
-
-		int Posi = 0;
-		for (int j = 0; j < NumCols; j++)
-		{
-			PosiB = j;
-
-			for (int i = 0; i < NumRows; i++)
-			{
-				answ.data[Posi] = data[PosiB];
-				PosiB += NumCols;
-
-				Posi++;
-			}			
-		}
-
-		return answ;
-	}
-	//
-
 	// signs
 	FloatMat getSigns()
 	{
@@ -369,126 +367,7 @@ public:
 
 		return answ;
 	}
-	//
-
-	// 显示，文件读写
-	void display()
-	{
-		int posi = 0;
-
-		for (int i = 0; i < NumRows; i++)
-		{
-			for (int j = 0; j < NumCols; j++)
-			{
-				printf("%.6f, ", data[posi]);
-
-				posi++;
-			}
-
-			printf("\n");
-		}
-	}
-	void writeToFile(FILE * fid)
-	{
-		int posi = 0;
-
-		for (int i = 0; i < NumRows; i++)
-		{
-			for (int j = 0; j < NumCols; j++)
-			{
-				fprintf(fid, "%f,", data[posi]);
-
-				posi++;
-			}
-
-			fprintf(fid,"\n");
-		}
-	}
-	void loadFromFile(FILE * fid, int NumRows)
-	{
-		// 2048, 4096
-		int LenBuff = 4096;
-
-		char * buff = new char[LenBuff];		
-		char * str_begin;
-		int curr;
-
-		//
-		int Posi = 0;
-
-		for (int i = 0; i < NumRows; i++)
-		{
-			fgets(buff, LenBuff, fid);
-
-			//
-			str_begin = buff;
-
-			curr = 0;
-			while (buff[curr] != '\n')
-			{
-				if (buff[curr] == ',')
-				{
-					buff[curr] = '\0';
-
-					sscanf(str_begin, "%f", data + Posi);
-
-					//
-					Posi++;
-
-					//
-					curr++;
-
-					str_begin = buff + curr;
-				}
-				else
-				{
-					curr++;
-				}
-			}
-
-		}// for i NumRows
-
-		//
-		delete [] buff;
-	}
-	//
-	int loadAllDataInFile(char * filepath)
-	{
-		//
-		FILE * fid = fopen(filepath, "r");
-		if (fid == NULL) return -1;
-
-		// 2048, 4096
-		int LenBuff = 4096;
-		char * buff = new char[LenBuff];
-		//
-
-		//
-		int Count = 0;
-		//
-		while (fgets(buff, LenBuff, fid) != NULL)
-		{
-			Count++;
-		}
-		fclose(fid);
-		//
-
-		//
-		this->setMatSize(Count, NumCols);
-		//
-		fid = fopen(filepath, "r");
-		this->loadFromFile(fid, Count);
-		fclose(fid);
-		//
-
-		//
-		return Count;
-
-	}
-	//
-
-
-	// 特殊情况
+	// 常数
 	void setMatConstant(float a)
 	{
 		for (int i = 0; i < NumTotal; i++)
@@ -509,7 +388,6 @@ public:
 		data = new float[NumTotal];
 		memcpy(data, mat.data, sizeof(float) * NumTotal);
 	}
-
 	// 随机化
 	void randomize(int a, int b)
 	{
@@ -630,6 +508,123 @@ public:
 		return answ/NumTotal;
 	}
 	//
+
+	// 显示，文件读写
+	void display()
+	{
+		int posi = 0;
+
+		for (int i = 0; i < NumRows; i++)
+		{
+			for (int j = 0; j < NumCols; j++)
+			{
+				printf("%.6f, ", data[posi]);
+
+				posi++;
+			}
+
+			printf("\n");
+		}
+	}
+	void writeToFile(FILE * fid)
+	{
+		int posi = 0;
+
+		for (int i = 0; i < NumRows; i++)
+		{
+			for (int j = 0; j < NumCols; j++)
+			{
+				fprintf(fid, "%f,", data[posi]);
+
+				posi++;
+			}
+
+			fprintf(fid,"\n");
+		}
+	}
+	void loadFromFile(FILE * fid, int NumRows)
+	{
+		// 2048, 4096
+		int LenBuff = 4096;
+
+		char * buff = new char[LenBuff];
+		char * str_begin;
+		int curr;
+
+		//
+		int Posi = 0;
+
+		for (int i = 0; i < NumRows; i++)
+		{
+			fgets(buff, LenBuff, fid);
+
+			//
+			str_begin = buff;
+
+			curr = 0;
+			while (buff[curr] != '\n')
+			{
+				if (buff[curr] == ',')
+				{
+					buff[curr] = '\0';
+
+					sscanf(str_begin, "%f", data + Posi);
+
+					//
+					Posi++;
+
+					//
+					curr++;
+
+					str_begin = buff + curr;
+				}
+				else
+				{
+					curr++;
+				}
+			}
+
+		}// for i NumRows
+
+		//
+		delete [] buff;
+	}
+	//
+	int loadAllDataInFile(char * filepath)
+	{
+		//
+		FILE * fid = fopen(filepath, "r");
+		if (fid == NULL) return -1;
+
+		// 2048, 4096
+		int LenBuff = 4096;
+		char * buff = new char[LenBuff];
+		//
+
+		//
+		int Count = 0;
+		//
+		while (fgets(buff, LenBuff, fid) != NULL)
+		{
+			Count++;
+		}
+		fclose(fid);
+		//
+
+		//
+		this->setMatSize(Count, NumCols);
+		//
+		fid = fopen(filepath, "r");
+		this->loadFromFile(fid, Count);
+		fclose(fid);
+		//
+
+		//
+		return Count;
+
+	}
+	//
+
 	// CBLAS
 	float getNormL1()
 	{
@@ -763,7 +758,6 @@ public:
 	}
 	//
 
-	//
 	//
 	int solveWithSymMat_Self(FloatMat symMat, FloatMat & X)
 	{
